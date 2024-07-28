@@ -1,9 +1,9 @@
 import React from 'react';
-import logo from '../img/logo.svg';
-import { Navbar, Provider, Container } from 'rendition';
+import logo from '../img/logo.png';
+import { Navbar as RenditionNavbar, Provider, Container } from 'rendition';
 import { NetworkInfoForm } from './NetworkInfoForm';
 import { Notifications } from './Notifications';
-import { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 
 const GlobalStyle = createGlobalStyle`
 	body {
@@ -30,6 +30,21 @@ export interface Network {
 	ssid: string;
 	security: string;
 }
+
+const NavbarBrand = styled.div`
+	display: flex;
+	align-items: center;
+`;
+
+const Logo = styled.img`
+	height: 50px;
+	margin-right: 10px;
+`;
+
+const BrandText = styled.span`
+	font-size: 1.5rem;
+	color: white;
+`;
 
 const App = () => {
 	const [attemptedConnect, setAttemptedConnect] = React.useState(false);
@@ -81,7 +96,14 @@ const App = () => {
 	return (
 		<Provider>
 			<GlobalStyle />
-			<Navbar brand={<img src={logo} style={{ height: 30 }} alt="logo" />} />
+			<RenditionNavbar
+				brand={
+					<NavbarBrand>
+						<Logo src={logo} alt="logo" />
+						<BrandText>IronPort</BrandText>
+					</NavbarBrand>
+				}
+			/>
 
 			<Container>
 				<Notifications

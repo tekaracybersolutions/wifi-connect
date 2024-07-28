@@ -85,7 +85,9 @@ export const NetworkInfoForm = ({
 			mt={5}
 		>
 			<Heading.h3 align="center" mb={4}>
-				Hi! Please choose your WiFi from the list
+				IronPort
+				<br />
+				Please choose your WiFi from the list
 			</Heading.h3>
 
 			<Form
