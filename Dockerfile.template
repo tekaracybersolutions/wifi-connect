@@ -8,6 +8,8 @@ RUN install_packages dnsmasq wireless-tools
 
 # use latest version. If specific version is required, it should be provided as vX.Y.Z, e.g v4.11.37
 ARG VERSION="latest"
+ENV PORTAL_SSID='Tekara Connect'
+ENV PORTAL_LISTENING_PORT=8080
 
 WORKDIR /usr/src/app
 
