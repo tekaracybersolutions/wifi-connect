@@ -6,6 +6,10 @@ export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # sometimes. In this case, following checks will fail and wifi-connect
 # will be launched even if the device will be able to connect to a WiFi network.
 # If this is your case, you can wait for a while and then check for the connection.
+LOG_FILE=start.log
+exec > >(tee ${LOG_FILE}) 2>&1
+
+echo "starting start script..."
 sleep 10
 
 # Choose a condition for running WiFi Connect according to your use case:
@@ -33,4 +37,4 @@ else
 fi
 
 # Start your application here.
-sleep infinity
+tail -f $LOG_FILE
