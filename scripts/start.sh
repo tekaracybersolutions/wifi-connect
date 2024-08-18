@@ -11,7 +11,7 @@ exec > >(tee ${LOG_FILE}) 2>&1
 
 echo "starting start script..."
 sleep 10
-
+export PORTAL_SSID="Tekara-connect-${RESIN_DEVICE_UUID:0:5}"
 # Choose a condition for running WiFi Connect according to your use case:
 
 # 1. Is there a default gateway?
@@ -38,3 +38,5 @@ fi
 
 # Start your application here.
 tail -f $LOG_FILE
+
+sleep infinity
