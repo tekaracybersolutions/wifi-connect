@@ -24,19 +24,20 @@ export PORTAL_SSID="Tekara-connect-${RESIN_DEVICE_UUID:0:5}"
 # wget --spider http://google.com 2>&1
 
 # 4. Is there an active WiFi connection?
-iwgetid -r
+while true; do
+    iwgetid -r
 
-#ping -c 4 8.8.8.8 >/dev/null 2>&1
+    #ping -c 4 8.8.8.8 >/dev/null 2>&1
 
-if [ $? -eq 0 ]; then
-    printf 'Skipping WiFi Connect\n'
-else
-    printf 'Starting WiFi Connect\n'
+    if [ $? -eq 0 ]; then
+        printf 'Skipping WiFi Connect\n'
+    else
+        printf 'Starting WiFi Connect\n'
 
-    ./wifi-connect #> wificonnect.log
-fi
+        ./wifi-connect #> wificonnect.log
+    fi
 
-# Start your application here.
-#tail -f $LOG_FILE
-
-sleep infinity
+    # Start your application here.
+    #tail -f $LOG_FILE
+    sleep 60
+done
