@@ -107,15 +107,6 @@ export const NetworkInfoForm = ({
 				}}
 				submitButtonText={'Connect'}
 			/>
-
-			<Button
-				width="24%"
-				mx="20%"
-				mt={3}
-				onClick={() => (window.location.href = 'http://tekara-panel.local')}
-			>
-				Use Without WiFi
-			</Button>
 		</Flex>
 	);
 };
