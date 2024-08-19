@@ -7,7 +7,7 @@ export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # will be launched even if the device will be able to connect to a WiFi network.
 # If this is your case, you can wait for a while and then check for the connection.
 LOG_FILE=start.log
-exec > >(tee ${LOG_FILE}) 2>&1
+#exec > >(tee ${LOG_FILE}) 2>&1
 
 echo "starting start script..."
 sleep 10
@@ -33,10 +33,10 @@ if [ $? -eq 0 ]; then
 else
     printf 'Starting WiFi Connect\n'
 
-    ./wifi-connect > wificonnect.log
+    ./wifi-connect #> wificonnect.log
 fi
 
 # Start your application here.
-tail -f $LOG_FILE
+#tail -f $LOG_FILE
 
 sleep infinity
