@@ -1,34 +1,62 @@
 ARG BALENA_ARCH=%%BALENA_ARCH%%
+# Stage 1: Builder
+FROM balenalib/$BALENA_ARCH-debian as builder
 
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y -q build-essential curl pkg-config libssl-dev libdbus-1-dev libclang-dev clang
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Create a new empty shell project
+RUN USER=root cargo new --bin wifi-connect
+WORKDIR /myapp
+
+# Copy the Cargo.toml and Cargo.lock
+COPY Cargo.toml Cargo.lock ./
+
+# Copy the source code
+COPY src ./src
+
+# This step builds the dependencies (and only the dependencies)
+RUN cargo build --release
+
+# Build the application
+RUN cargo build --release --verbose
+
+# Stage 2: Runner
 FROM balenalib/$BALENA_ARCH-debian
-ARG BALENA_ARCH=%%BALENA_ARCH%%
 
 RUN install_packages dnsmasq wireless-tools
 
 # use latest version. If specific version is required, it should be provided as vX.Y.Z, e.g v4.11.37
 ARG VERSION="latest"
 ENV PORTAL_LISTENING_PORT=8080
+#ENV ACTIVITY_TIMEOUT=120
 WORKDIR /usr/src/app
 
-RUN \
-    export BASE_URL="https://github.com/balena-os/wifi-connect/releases" &&\    
-    case $BALENA_ARCH in \
-        "aarch64") \
-            BINARY_ARCH_NAME="aarch64-unknown-linux-gnu" ;; \
-        "amd64") \
-            BINARY_ARCH_NAME="x86_64-unknown-linux-gnu" ;;\
-        "armv7hf") \
-            BINARY_ARCH_NAME="armv7-unknown-linux-gnueabihf" ;;\
-        *) \
-            echo >&2 "error: unsupported architecture ($BALENA_ARCH)"; exit 1 ;; \ 
-    esac;\
-    if [ ${VERSION} = "latest" ]; then \
-        export URL_PARTIAL="latest/download" ; \
-    else \
-        export URL_PARTIAL="download/${VERSION}" ; \
-    fi; \
-    curl -Ls "$BASE_URL/$URL_PARTIAL/wifi-connect-$BINARY_ARCH_NAME.tar.gz" \
-    | tar -xvz -C  /usr/src/app/
+#RUN \
+#    export BASE_URL="https://github.com/balena-os/wifi-connect/releases" &&\    
+#    case $BALENA_ARCH in \
+#        "aarch64") \
+#            BINARY_ARCH_NAME="aarch64-unknown-linux-gnu" ;; \
+#        "amd64") \
+#            BINARY_ARCH_NAME="x86_64-unknown-linux-gnu" ;;\
+#        "armv7hf") \
+#            BINARY_ARCH_NAME="armv7-unknown-linux-gnueabihf" ;;\
+#        *) \
+#            echo >&2 "error: unsupported architecture ($BALENA_ARCH)"; exit 1 ;; \ 
+#    esac;\
+#    if [ ${VERSION} = "latest" ]; then \
+#        export URL_PARTIAL="latest/download" ; \
+#    else \
+#        export URL_PARTIAL="download/${VERSION}" ; \
+#    fi; \
+#    curl -Ls "$BASE_URL/$URL_PARTIAL/wifi-connect-$BINARY_ARCH_NAME.tar.gz" \
+#    | tar -xvz -C  /usr/src/app/
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /myapp/target/release/wifi-connect .
 
 COPY scripts/start.sh .
 COPY ui/build ui
