@@ -60,7 +60,7 @@ impl NetworkCommandHandler {
 
         let device = find_device(&manager, &config.interface)?;
 
-        let access_points = get_access_points(&device)?;
+        let access_points = get_access_points(&device, &config.ssid)?;
 
         let portal_connection = Some(create_portal(&device, config)?);
 
@@ -221,7 +221,7 @@ impl NetworkCommandHandler {
 
         self.portal_connection = None;
 
-        self.access_points = get_access_points(&self.device)?;
+        self.access_points = get_access_points(&self.device,ssid)?;
 
         if let Some(access_point) = find_access_point(&self.access_points, ssid) {
             let wifi_device = self.device.as_wifi_device().unwrap();
@@ -262,7 +262,7 @@ impl NetworkCommandHandler {
             }
         }
 
-        self.access_points = get_access_points(&self.device)?;
+        self.access_points = get_access_points(&self.device,ssid)?;
 
         self.portal_connection = Some(create_portal(&self.device, &self.config)?);
 
@@ -354,11 +354,11 @@ fn find_wifi_managed_device(devices: Vec<Device>) -> Result<Option<Device>> {
     Ok(None)
 }
 
-fn get_access_points(device: &Device) -> Result<Vec<AccessPoint>> {
-    get_access_points_impl(device).chain_err(|| ErrorKind::NoAccessPoints)
+fn get_access_points(device: &Device, ssid: &str) -> Result<Vec<AccessPoint>> {
+    get_access_points_impl(device,ssid).chain_err(|| ErrorKind::NoAccessPoints)
 }
 
-fn get_access_points_impl(device: &Device) -> Result<Vec<AccessPoint>> {
+fn get_access_points_impl(device: &Device, ssid: &str) -> Result<Vec<AccessPoint>> {
     let retries_allowed = 10;
     let mut retries = 0;
 
@@ -376,6 +376,9 @@ fn get_access_points_impl(device: &Device) -> Result<Vec<AccessPoint>> {
 
         // Remove access points without SSID (hidden)
         access_points.retain(|ap| !ap.ssid().as_str().unwrap().is_empty());
+
+        // Remove access points with the same SSID
+        access_points.retain(|ap| ap.ssid().as_str().unwrap() != ssid);
 
         if !access_points.is_empty() {
             info!(
