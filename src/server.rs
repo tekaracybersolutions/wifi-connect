@@ -151,6 +151,8 @@ pub fn start_server(
     let mut router = Router::new();
     router.get("/", Static::new(ui_directory), "index");
     router.get("/networks", networks, "networks");
+    router.get("/stop", stop, "stop");
+
     router.post("/connect", connect, "connect");
 
     let mut assets = Mount::new();
@@ -227,4 +229,16 @@ fn connect(req: &mut Request) -> IronResult<Response> {
     } else {
         Ok(Response::with(status::Ok))
     }
+}
+
+fn stop(req: &mut Request) -> IronResult<Response> {
+    info!("User requested to stop the service");
+
+    let request_state = get_request_state!(req);
+
+    // Send the Stop command to the network command handler
+    if let Err(e) = request_state.network_tx.send(NetworkCommand::Stop) {
+        return exit_with_error(&request_state, e, ErrorKind::SendNetworkCommandStop);
+    }
+    Ok(Response::with(status::Ok))
 }

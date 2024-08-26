@@ -25,6 +25,7 @@ pub enum NetworkCommand {
         identity: String,
         passphrase: String,
     },
+    Stop,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -176,6 +177,10 @@ impl NetworkCommandHandler {
                     if self.connect(&ssid, &identity, &passphrase)? {
                         return Ok(());
                     }
+                }
+                NetworkCommand::Stop => {
+                    info!("Stopping...");
+                    return Ok(());
                 }
             }
         }

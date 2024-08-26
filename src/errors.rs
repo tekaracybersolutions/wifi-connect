@@ -70,6 +70,10 @@ error_chain! {
             description("Stopping the access point failed")
         }
 
+        SendNetworkCommandStop {
+            description("Sending NetworkCommand::Stop failed")
+        }
+        
         DeleteAccessPoint {
             description("Deleting access point connection profile failed")
         }
