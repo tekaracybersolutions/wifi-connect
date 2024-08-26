@@ -25,7 +25,6 @@ pub enum NetworkCommand {
         identity: String,
         passphrase: String,
     },
-    Stop,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -174,13 +173,10 @@ impl NetworkCommandHandler {
                     identity,
                     passphrase,
                 } => {
+                    info!("conecting...");
                     if self.connect(&ssid, &identity, &passphrase)? {
                         return Ok(());
                     }
-                }
-                NetworkCommand::Stop => {
-                    info!("Stopping...");
-                    return Ok(());
                 }
             }
         }
@@ -218,16 +214,13 @@ impl NetworkCommandHandler {
     }
 
     fn connect(&mut self, ssid: &str, identity: &str, passphrase: &str) -> Result<bool> {
-        delete_existing_connections_to_same_network(&self.manager, ssid);
 
+        delete_existing_connections_to_same_network(&self.manager, ssid);
         if let Some(ref connection) = self.portal_connection {
             stop_portal(connection, &self.config)?;
         }
-
         self.portal_connection = None;
-
-        self.access_points = get_access_points(&self.device,ssid)?;
-
+        self.access_points = get_access_points(&self.device,&self.config.ssid)?;
         if let Some(access_point) = find_access_point(&self.access_points, ssid) {
             let wifi_device = self.device.as_wifi_device().unwrap();
 
@@ -267,7 +260,7 @@ impl NetworkCommandHandler {
             }
         }
 
-        self.access_points = get_access_points(&self.device,ssid)?;
+        self.access_points = get_access_points(&self.device,&self.config.ssid)?;
 
         self.portal_connection = Some(create_portal(&self.device, &self.config)?);
 
@@ -364,6 +357,7 @@ fn get_access_points(device: &Device, ssid: &str) -> Result<Vec<AccessPoint>> {
 }
 
 fn get_access_points_impl(device: &Device, ssid: &str) -> Result<Vec<AccessPoint>> {
+    info!("get_access_points_impl >>");
     let retries_allowed = 10;
     let mut retries = 0;
 
@@ -394,7 +388,7 @@ fn get_access_points_impl(device: &Device, ssid: &str) -> Result<Vec<AccessPoint
         }
 
         retries += 1;
-        debug!("No access points found - retry #{}", retries);
+        info!("No access points found - retry #{}", retries);
         thread::sleep(Duration::from_secs(1));
     }
 
