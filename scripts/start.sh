@@ -63,3 +63,5 @@ else
     printf 'Starting WiFi Connect\n'
     ./wifi-connect
 fi
+
+sleep infinity
