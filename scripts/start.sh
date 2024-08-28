@@ -39,7 +39,7 @@ check_connection() {
     SSID=$(iwgetid -r)
     
     if [ -n "$SSID" ]; then
-        echo "Connected to WiFi network: $SSID. Skipping WiFi Connect."
+        echo "Connected to WiFi network: $SSID."
         
         # Check if connected to Balena Cloud
         if ping -c 1 api.balena-cloud.com > /dev/null 2>&1; then
@@ -55,19 +55,11 @@ check_connection() {
     return 1
 }
 
+connection=$? 
 
-
-
-while true; do
-    check_connection
-    connection=$? 
-
-    if [ "$connection" -eq 0 ]; then
-        printf 'Skipping WiFi Connect\n'
-    else
-        printf 'Starting WiFi Connect\n'
-        ./wifi-connect
-    fi
-
-    sleep 60
-done
+if [ "$connection" -eq 0 ]; then
+    printf 'Skipping WiFi Connect\n'
+else
+    printf 'Starting WiFi Connect\n'
+    ./wifi-connect
+fi
