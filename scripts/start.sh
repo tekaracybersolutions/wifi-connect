@@ -55,6 +55,7 @@ check_connection() {
     return 1
 }
 
+check_connection
 connection=$? 
 
 if [ "$connection" -eq 0 ]; then
