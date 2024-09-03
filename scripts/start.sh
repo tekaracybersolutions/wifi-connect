@@ -6,8 +6,14 @@ export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # sometimes. In this case, following checks will fail and wifi-connect
 # will be launched even if the device will be able to connect to a WiFi network.
 # If this is your case, you can wait for a while and then check for the connection.
+log_with_timestamp() {
+    while IFS= read -r line; do
+        echo "$(date +"[%d-%m-%Y %H:%M:%S]") $line"
+    done
+}
+
 LOG_FILE=/logs/start.log
-exec >> >(tee ${LOG_FILE}) 2>&1
+exec > >(log_with_timestamp | tee -a ${LOG_FILE}) 2>&1
 
 # Check if the file exists
 if [ ! -f "$LOG_FILE" ]; then
@@ -17,6 +23,28 @@ if [ ! -f "$LOG_FILE" ]; then
 else
     echo "File '$LOG_FILE' already exists."
 fi 
+
+check_api_ping() {
+    local API_ENDPOINT='api.balena-cloud.com'
+    local ATTEMPTS=3
+
+    # Loop through the attempts
+    for i in $(seq 1 $ATTEMPTS); do
+        # Ping the API endpoint
+        if ping -c 1 $API_ENDPOINT &> /dev/null; then
+            # If ping is successful, return true (exit 0)
+            echo "Ping to $API_ENDPOINT successful."
+            return 0
+        fi
+        # If ping fails, wait a moment before retrying
+        sleep 3
+    done
+
+    # If all attempts fail, return false (exit 1)
+    echo "Ping to $API_ENDPOINT failed after $ATTEMPTS attempts."
+    return 1
+}
+
 
 echo "starting start script..."
 sleep 10
@@ -42,8 +70,8 @@ check_connection() {
         echo "Connected to WiFi network: $SSID."
         
         # Check if connected to Balena Cloud
-        if ping -c 1 api.balena-cloud.com > /dev/null 2>&1; then
-            echo "Connected to Balena Cloud. Skipping WiFi Connect."
+        if check_api_ping $API_ENDPOINT; then
+            echo "Connected to Balena Cloud."
             return 0
         else
             echo "Connected to WiFi network: $SSID, but failed to connect to Balena Cloud."
