@@ -7,7 +7,7 @@ export DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 # will be launched even if the device will be able to connect to a WiFi network.
 # If this is your case, you can wait for a while and then check for the connection.
 LOG_FILE=/logs/start.log
-exec > >(tee ${LOG_FILE}) 2>&1
+exec >> >(tee ${LOG_FILE}) 2>&1
 
 # Check if the file exists
 if [ ! -f "$LOG_FILE" ]; then
