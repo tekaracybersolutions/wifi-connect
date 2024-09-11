@@ -88,9 +88,9 @@ connection=$?
 
 if [ "$connection" -eq 0 ]; then
     printf 'Skipping WiFi Connect\n'
+    sleep infinity
 else
     printf 'Starting WiFi Connect\n'
     ./wifi-connect
 fi
 
-sleep infinity
