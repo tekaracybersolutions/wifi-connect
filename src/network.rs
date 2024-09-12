@@ -220,42 +220,57 @@ impl NetworkCommandHandler {
             stop_portal(connection, &self.config)?;
         }
         self.portal_connection = None;
-        self.access_points = get_access_points(&self.device,&self.config.ssid)?;
-        if let Some(access_point) = find_access_point(&self.access_points, ssid) {
-            let wifi_device = self.device.as_wifi_device().unwrap();
+        const MAX_ATTEMPTS: usize = 5;
 
-            info!("Connecting to access point '{}'...", ssid);
+        let mut attempts = 0;
+        const SLEEP_DURATION: Duration = Duration::from_secs(2); // 2 seconds delay between attempts
 
-            let credentials = init_access_point_credentials(access_point, identity, passphrase);
-
-            match wifi_device.connect(access_point, &credentials) {
-                Ok((connection, state)) => {
-                    if state == ConnectionState::Activated {
-                        match wait_for_connectivity(&self.manager, 20) {
-                            Ok(has_connectivity) => {
-                                if has_connectivity {
-                                    info!("Internet connectivity established");
-                                } else {
-                                    warn!("Cannot establish Internet connectivity");
+        while attempts < MAX_ATTEMPTS {
+            attempts += 1;
+            self.access_points = get_access_points(&self.device,&self.config.ssid)?;
+            if let Some(access_point) = find_access_point(&self.access_points, ssid) {
+                let wifi_device = self.device.as_wifi_device().unwrap();
+    
+                info!("Connecting to access point '{}'...", ssid);
+    
+                let credentials = init_access_point_credentials(access_point, identity, passphrase);
+    
+                match wifi_device.connect(access_point, &credentials) {
+                    Ok((connection, state)) => {
+                        if state == ConnectionState::Activated {
+                            match wait_for_connectivity(&self.manager, 20) {
+                                Ok(has_connectivity) => {
+                                    if has_connectivity {
+                                        info!("Internet connectivity established");
+                                    } else {
+                                        warn!("Cannot establish Internet connectivity");
+                                    }
                                 }
+                                Err(err) => error!("Getting Internet connectivity failed: {}", err),
                             }
-                            Err(err) => error!("Getting Internet connectivity failed: {}", err),
+    
+                            return Ok(true);
                         }
-
-                        return Ok(true);
+    
+                        if let Err(err) = connection.delete() {
+                            error!("Deleting connection object failed: {}", err)
+                        }
+    
+                        warn!(
+                            "Connection to access point not activated '{}': {:?}",
+                            ssid, state
+                        );
                     }
-
-                    if let Err(err) = connection.delete() {
-                        error!("Deleting connection object failed: {}", err)
+                    Err(e) => {
+                        warn!("Error connecting to access point '{}': {}", ssid, e);
                     }
-
-                    warn!(
-                        "Connection to access point not activated '{}': {:?}",
-                        ssid, state
-                    );
                 }
-                Err(e) => {
-                    warn!("Error connecting to access point '{}': {}", ssid, e);
+            } else {
+                warn!("Access point '{}' not found on attempt {}", ssid, attempts);
+                // Sleep before retrying if the maximum number of attempts hasn't been reached
+                if attempts < MAX_ATTEMPTS {
+                    info!("Retrying to connect in 2 seconds...");
+                    sleep(SLEEP_DURATION); // Pause before next attempt
                 }
             }
         }
