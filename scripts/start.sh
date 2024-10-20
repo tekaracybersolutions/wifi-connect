@@ -72,7 +72,7 @@ check_connection() {
         # Check if connected to Balena Cloud
         if [[ -n "${CHECK_CONNECTIVITY+x}" && "${CHECK_CONNECTIVITY,,}" == "false" ]]; then
             echo "skipping ping"
-            return 1;
+            return 0;
         fi
 
         if check_api_ping $API_ENDPOINT; then
